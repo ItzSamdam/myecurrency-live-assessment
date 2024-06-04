@@ -2,7 +2,6 @@
 import jwt from "jsonwebtoken";
 import { config } from "../../config/config.config";
 import { IResponseToken } from "../../interfaces/i.response.token";
-import { prisma } from "../../utils/misc.utils";
 import moment from "moment";
 
 /**
@@ -27,21 +26,7 @@ const generateAuthToken = async (
 
 
   const refreshTokenExpires = moment().add(config.jwt.refresh_token.expire, "days");
-  //handle saving to db and retrieving from db
-  await prisma.userTokens.upsert({
-    where: { userId },
-    create: {
-      userId,
-      accessToken,
-      refreshToken,
-      refreshTokenExpires: refreshTokenExpires.toDate(),
-    },
-    update: {
-      accessToken,
-      refreshToken,
-      refreshTokenExpires: refreshTokenExpires.toDate(),
-    },
-  });
+  
   return {
     accessToken,
     refreshToken,

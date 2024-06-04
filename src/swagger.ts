@@ -35,7 +35,7 @@ const options = {
     // looks for configuration in specified directories
     apis: [
         // './src/routes/adminRoutes/*.ts',
-        // './src/routes/apiRoutes/*.ts',
+        './src/routes/*.ts',
     ],
 };
 

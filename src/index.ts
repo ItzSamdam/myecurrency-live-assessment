@@ -1,13 +1,12 @@
 import express, {
   Application,
-  Express,
   Request,
   Response,
   json,
 } from "express";
 import cors from "cors";
 import helmet from "helmet";
-// import routesConfigs from "./routes/route";
+import routesConfigs from "./routes/route";
 import errorHandler from "./middleware/errorHandler";
 import { logger } from "./utils/logger.utils";
 import { config } from "./config/config.config";
@@ -17,9 +16,7 @@ import NotFoundException from "./exceptions/NotFoundException";
 import passport from "passport";
 import httpStatus from "http-status";
 import http, { Server as HTTPServer } from "http";
-import endpoints = require("express-list-endpoints");
 import swaggerDocs from "./swagger";
-import { prisma } from "./utils/misc.utils";
 
 const app: Application = express();
 const httpServer: HTTPServer = http.createServer(app);
@@ -50,49 +47,15 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get(`/healthCheck`, (req: Request, res: Response) => {
-  /**
-   * An array of paths extracted from the endpoints.
-   *
-   * @type {string[]}
-   */
-  const result: string[] = endpoints(app as Express).map((endpoint) => endpoint.path);
-  return res.status(httpStatus.OK).json({
-    statusCode: httpStatus.OK,
-    status: "success",
-    message: 'Ehyo Routes are up and running',
-    data: result
-  });
-});
-
 app.get(`/`, (req: Request, res: Response) => {
   return res.status(httpStatus.OK).json({
     statusCode: httpStatus.OK,
     status: "success",
-    message: 'EhYo Communication API',
+    message: 'Interview API',
   });
 });
 
-app.get(`/checkDB`, (req: Request, res: Response) => {
-  //connect to mysql database
-  const check = prisma.$connect();
-  if (check !== undefined) {
-    return res.status(httpStatus.OK).json({
-      statusCode: httpStatus.OK,
-      status: "success",
-      message: 'EhYo Database is up and running',
-    });
-  } else {
-    return res.status(httpStatus.INTERNAL_SERVER_ERROR).json({
-      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
-      status: "error",
-      message: 'EhYo Database is down',
-    });
-  }
-});
-
-
-// routesConfigs.forEach((routeConfig) => new routeConfig(app));
+routesConfigs.forEach((routeConfig) => new routeConfig(app));
 
 const port = config.port || 3000;
 const env = config.env || "development";
