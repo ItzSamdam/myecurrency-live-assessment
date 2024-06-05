@@ -80,19 +80,19 @@ class AuthService extends BaseService {
     }
 
     async generateRefCode(data: { refCode: string, userId: string }) {
-        const checkRefCode = await prisma.user.findFirst({
-            where: {
-                referalCode: data.refCode
-            }
-        })
-        if (checkRefCode) {
-            throw new BadRequestException("RefCode In Use. Please use another")
-        }
         //check to avoid change in ref code after first change
         const checkRef = await prisma.user.findUnique({
             where: { id: data.userId }
         })
         if (checkRef && checkRef.referalCode == null) {
+            const checkRefCode = await prisma.user.findFirst({
+                where: {
+                    referalCode: data.refCode
+                }
+            })
+            if (checkRefCode) {
+                throw new BadRequestException("Referral Code Already Exist. Please Try Another")
+            }
             const saveCode = await prisma.user.update({
                 where: {
                     id: data.userId
@@ -105,6 +105,7 @@ class AuthService extends BaseService {
             return !!saveCode;
         }
         throw new BadRequestException("Can Only Generate Ref Code Once")
+        
     }
 
     async convertRefPoints(data: { userId: string }) {
