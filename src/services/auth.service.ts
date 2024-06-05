@@ -56,10 +56,10 @@ class AuthService extends BaseService {
         }
     }
 
-    async login(data: { username: string, password: string }) {
+    async login(data: { email: string, password: string }) {
         const user = await prisma.user.findUnique({
             where: {
-                username: data.username
+                email: data.email
             }
         })
         if (!user) {

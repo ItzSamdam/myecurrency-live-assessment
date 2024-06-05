@@ -39,8 +39,8 @@ class AuthController extends BaseContoller {
 
     async loginUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const { username, password } = req.body;
-            const data = { username, password }
+            const { email, password } = req.body;
+            const data = { email, password }
             const user = await this.authService.login(data);
             return res.status(httpStatus.OK).json({
                 status: 'success',
