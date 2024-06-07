@@ -20,6 +20,13 @@ class AuthController extends BaseContoller {
         return { id };
     }
 
+    private stripChar(str: number): number {
+        //remove all non digit characters
+        const cleanedStr = str.toString().replace(/[^\d.]/g, '')  // Remove non-digit characters except decimal points
+            .replace(/(\..*?)\..*/g, '$1');  // Remove all but the first decimal point
+        console.log(cleanedStr);
+        return parseFloat(cleanedStr);
+    }
 
     async registerNewUser(req: Request, res: Response, next: NextFunction) {
         try {
@@ -53,29 +60,29 @@ class AuthController extends BaseContoller {
         }
     }
 
-    async generateReferral(req: Request, res: Response, next: NextFunction) {
-        try {
-            const { referalCode } = req.body;
+    // async generateReferral(req: Request, res: Response, next: NextFunction) {
+    //     try {
+    //         const { referalCode } = req.body;
 
-            const { id } = this.getUserId(req);
-            const data = { refCode: referalCode, userId: id }
-            const referral = await this.authService.generateRefCode(data);
-            return res.status(httpStatus.OK).json({
-                status: 'success',
-                statusCode: httpStatus.OK,
-                message: "Referral Code Updated successfully",
-                data: referral
-            });
-        } catch (error) {
-            next(error)
-        }
-    }
+    //         const { id } = this.getUserId(req);
+    //         const data = { refCode: referalCode, userId: id }
+    //         const referral = await this.authService.generateRefCode(data);
+    //         return res.status(httpStatus.OK).json({
+    //             status: 'success',
+    //             statusCode: httpStatus.OK,
+    //             message: "Referral Code Updated successfully",
+    //             data: referral
+    //         });
+    //     } catch (error) {
+    //         next(error)
+    //     }
+    // }
 
     async convertPointToBalance(req: Request, res: Response, next: NextFunction) {
         try {
 
             const { id } = this.getUserId(req);
-            const data = { userId: id };
+            const data = { userId: id, points2Convert: this.stripChar(req.body.points2Convert) };
             const referral = await this.authService.convertRefPoints(data);
             return res.status(httpStatus.OK).json({
                 status: 'success',
@@ -92,7 +99,7 @@ class AuthController extends BaseContoller {
         try {
             const { amount, accountNo } = req.body;
             const { id } = this.getUserId(req);
-            const data = { userId: id, amount, accountNo };
+            const data = { userId: id, amount: this.stripChar(amount), accountNo };
             const referral = await this.authService.handleWithraw(data);
             return res.status(httpStatus.OK).json({
                 status: 'success',

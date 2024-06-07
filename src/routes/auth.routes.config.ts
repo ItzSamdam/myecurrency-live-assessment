@@ -70,7 +70,7 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                  *                 example: success
                  *                message:
                  *                 type: string
-                 *                 example: 'EhYo Communication API'
+                 *                 example: 'Interview Assessment API API'
                  */
                 [
                     body("username").isString().notEmpty().withMessage("Username is required"),
@@ -135,7 +135,7 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                  *                 example: success
                  *                message:
                  *                 type: string
-                 *                 example: 'EhYo Communication API'
+                 *                 example: 'Interview Assessment API API'
                  */
                 [
                     body("email").isEmail().notEmpty().withMessage("Email Address is required"),
@@ -145,13 +145,60 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                 AuthController.loginUser.bind(AuthController)
         );
         
+        // this.app
+        //     .route(`${GuestRoutePrefix}/addRefCode`)
+        //     .patch(
+        //         /**
+        //          * @swagger
+        //          * /api/v1/addRefCode:
+        //          *   patch:
+        //          *     summary: Referal Code for a new user
+        //          *     description: Returns a success message for the google auth endpoint
+        //          *     tags: [Auth]
+        //          *     requestBody:
+        //          *      required: true
+        //          *      content:
+        //          *       application/json:
+        //          *          schema:
+        //          *           type: object
+        //          *           required:
+        //          *             - referalCode
+        //          *           properties:
+        //          *            referalCode:
+        //          *              type: string
+        //          *              example: 'johndoe@gmail.com'
+        //          *     responses:
+        //          *       200:
+        //          *         description: Success message
+        //          *         content:
+        //          *           application/json:
+        //          *             schema:
+        //          *               type: object
+        //          *               properties:
+        //          *                statusCode:
+        //          *                 type: number
+        //          *                 example: 200
+        //          *                status:
+        //          *                 type: string
+        //          *                 example: success
+        //          *                message:
+        //          *                 type: string
+        //          *                 example: 'Interview Assessment API API'
+        //          */
+        //         [
+        //             body("referalCode").isString().notEmpty().withMessage("referalCode is required"),
+        //         ],
+        //         [validateRequest, verifyAuth],
+        //         AuthController.generateReferral.bind(AuthController)
+        // );
+        
         this.app
-            .route(`${GuestRoutePrefix}/addRefCode`)
-            .patch(
+            .route(`${GuestRoutePrefix}/convertPoint`)
+            .post(
                 /**
                  * @swagger
-                 * /api/v1/addRefCode:
-                 *   patch:
+                 * /api/v1/convertPoint:
+                 *   post:
                  *     summary: Referal Code for a new user
                  *     description: Returns a success message for the google auth endpoint
                  *     tags: [Auth]
@@ -162,11 +209,12 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                  *          schema:
                  *           type: object
                  *           required:
-                 *             - referalCode
+                 *             - email
+                 *             - password
                  *           properties:
-                 *            referalCode:
-                 *              type: string
-                 *              example: 'johndoe@gmail.com'
+                 *            points2Convert:
+                 *              type: number
+                 *              example: 20
                  *     responses:
                  *       200:
                  *         description: Success message
@@ -183,43 +231,11 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                  *                 example: success
                  *                message:
                  *                 type: string
-                 *                 example: 'EhYo Communication API'
+                 *                 example: 'Interview Assessment API API'
                  */
                 [
-                    body("referalCode").isString().notEmpty().withMessage("referalCode is required"),
+                    body("points2Convert").isNumeric().notEmpty().withMessage("Points2Convert is required"),
                 ],
-                [validateRequest, verifyAuth],
-                AuthController.generateReferral.bind(AuthController)
-        );
-        
-        this.app
-            .route(`${GuestRoutePrefix}/convertPoint`)
-            .get(
-                /**
-                 * @swagger
-                 * /api/v1/convertPoint:
-                 *   get:
-                 *     summary: Referal Code for a new user
-                 *     description: Returns a success message for the google auth endpoint
-                 *     tags: [Auth]
-                 *     responses:
-                 *       200:
-                 *         description: Success message
-                 *         content:
-                 *           application/json:
-                 *             schema:
-                 *               type: object
-                 *               properties:
-                 *                statusCode:
-                 *                 type: number
-                 *                 example: 200
-                 *                status:
-                 *                 type: string
-                 *                 example: success
-                 *                message:
-                 *                 type: string
-                 *                 example: 'EhYo Communication API'
-                 */
                 [validateRequest, verifyAuth],
                 AuthController.convertPointToBalance.bind(AuthController)
         );
@@ -266,7 +282,7 @@ class AuthRoutesConfig extends BaseRoutesConfig {
                  *                 example: success
                  *                message:
                  *                 type: string
-                 *                 example: 'EhYo Communication API'
+                 *                 example: 'Interview Assessment API API'
                  */
                 [
                     body("amount").isNumeric().notEmpty().withMessage("Amount is required"),

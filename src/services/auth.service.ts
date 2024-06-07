@@ -34,7 +34,8 @@ class AuthService extends BaseService {
                 username: data.username,
                 firstname: data.firstname,
                 lastname: data.lastname,
-                password: await hashPassword(data.password)
+                password: await hashPassword(data.password),
+                referalCode: await this.generateRefCode(data.username)
             }
         })
 
@@ -57,9 +58,19 @@ class AuthService extends BaseService {
     }
 
     async login(data: { email: string, password: string }) {
-        const user = await prisma.user.findUnique({
+        //due to the orm i applied, findUnique is case sensitive.
+        //i can use findFirst with mode insensitive to make it case insensitive
+        //findFirst may not enforce unique constraints; 
+        //it will return the first match it finds, which might not be the only record
+        //if there are multiple records matching the condition(though ideally, the email field should be unique).
+        //Slightly less performant compared to findUnique due to the potential for more flexible searching.
+        //NB: This is particular to Prisma ORM
+        const user = await prisma.user.findFirst({
             where: {
-                email: data.email
+                email: {
+                    equals: data.email,
+                    mode: "insensitive"
+                }
             }
         })
         if (!user) {
@@ -79,49 +90,38 @@ class AuthService extends BaseService {
         }
     }
 
-    async generateRefCode(data: { refCode: string, userId: string }) {
-        //check to avoid change in ref code after first change
-        const checkRef = await prisma.user.findUnique({
-            where: { id: data.userId }
-        })
-        if (checkRef && checkRef.referalCode == null) {
-            const checkRefCode = await prisma.user.findFirst({
-                where: {
-                    referalCode: data.refCode
-                }
-            })
-            if (checkRefCode) {
-                throw new BadRequestException("Referral Code Already Exist. Please Try Another")
-            }
-            const saveCode = await prisma.user.update({
-                where: {
-                    id: data.userId
-                },
-                data: {
-                    referalCode: data.refCode
-                }
-            })
-
-            return !!saveCode;
-        }
-        throw new BadRequestException("Can Only Generate Ref Code Once")
-        
+    async generateRefCode(username: string) {
+        let refCode: string;
+        let checkRefCode: any;
+        do {
+            refCode = username + Math.floor(1000 + Math.random() * 9000);
+            checkRefCode = await prisma.user.findFirst({
+                where: { referalCode: refCode }
+            });
+        } while (checkRefCode);
+        return refCode;
     }
 
-    async convertRefPoints(data: { userId: string }) {
+    async convertRefPoints(data: { userId: string, points2Convert: number }) {
         const checkUserPoint = await prisma.user.findUnique({
             where: { id: data.userId }
         })
         if (!checkUserPoint || checkUserPoint.referalPoint == 0) {
             throw new BadRequestException("No referal point yet, please refer a user")
         }
+        if (data.points2Convert <= 0) {
+            throw new BadRequestException("Invalid Point to convert");
+        }
+        if (checkUserPoint.referalPoint < data.points2Convert) {
+            throw new BadRequestException("Insufficient Point Balance.");
+        }
         //convert point to balance
-        const pointsToAdd = 10 * checkUserPoint.referalPoint;
+        const pointsToAdd = 10 * data.points2Convert;
         await prisma.user.update({
             where: { id: data.userId },
             data: {
                 balance: checkUserPoint.balance + pointsToAdd,
-                referalPoint: 0
+                referalPoint: checkUserPoint.referalPoint - data.points2Convert
             }
         })
         return true;
@@ -141,7 +141,7 @@ class AuthService extends BaseService {
                 referrerUser: data.referUserId
             }
         })
-        const pointToadd = 1;
+        const pointToadd = 10;
         await prisma.user.update({
             where: {
                 id: referringUser.id
@@ -158,15 +158,16 @@ class AuthService extends BaseService {
             const user = await prisma.user.findUnique({
                 where: { id: data.userId }
             });
-
             if (!user) {
                 throw new BadRequestException("Invalid User Account");
             }
-            
-            if (data.amount > user.balance) {
-                throw new BadRequestException("Insufficient Balance");
+            // Return error if amount is less than 50
+            if (data.amount < 50.00 || data.amount > 9999.99) {
+                throw new BadRequestException("You can not withdraw less than NGN50.00 and more than NGN9,999.99");
             }
-
+            if (data.amount > user.balance) {
+                throw new BadRequestException("Insufficient Balance to process withdrawal");
+            }
             // Deduct the amount from the user's balance
             const updatedUser = await prisma.user.update({
                 where: { id: data.userId },
@@ -175,20 +176,12 @@ class AuthService extends BaseService {
                         decrement: data.amount,
                     },
                 },
-            });            
-
-            try {
-                // Handle transfer and account check
-                const transfer = await this.validateAccountAndTransfer({
-                    accountNo: data.accountNo, // Assuming the transfer account is passed in data
-                    amount: data.amount,
-                });
-
-                return { updatedUser, transfer };
-            } catch (error) {
-                console.log(error)
-                throw new BadRequestException("Transfer failed");
-            }
+            });
+            const transfer = await this.validateAccountAndTransfer({
+                accountNo: data.accountNo, // Assuming the transfer account is passed in data
+                amount: data.amount,
+            });
+            return { updatedUser, transfer };
         });
     }
 
