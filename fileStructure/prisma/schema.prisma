@@ -1,0 +1,30 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// using mysql as the preferred database in this case
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "mysql" //available options are PostgreSQL, MySQL, SQL Server, SQLite, MongoDB, CockroachDB, PlanetScale, MariaDB
+  url               = env("MONGO_URI")
+//   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+//define models below
+model User {
+  id          String   @id @default(uuid())
+  username  String
+  email     String   @unique
+  password  String
+  profile   Profile?
+}
+
+model Profile {
+  id          String   @id @default(uuid())
+  bio       String?
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String     @unique
+}

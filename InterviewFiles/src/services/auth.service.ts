@@ -49,7 +49,7 @@ class AuthService extends BaseService {
         }
         //generate token for auth
         const tken = await generateAuthToken(newUser.id)
-        //exxclude passwrd from response
+        //exclude password from response
         const userData = excludeGlobal(newUser, ["password"]);
         return {
             user: userData,
@@ -60,7 +60,7 @@ class AuthService extends BaseService {
     async login(data: { email: string, password: string }) {
         //due to the orm i applied, findUnique is case sensitive.
         //i can use findFirst with mode insensitive to make it case insensitive
-        //findFirst may not enforce unique constraints; 
+        //findFirst may not enforce unique constraints;
         //it will return the first match it finds, which might not be the only record
         //if there are multiple records matching the condition(though ideally, the email field should be unique).
         //Slightly less performant compared to findUnique due to the potential for more flexible searching.

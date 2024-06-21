@@ -20,6 +20,10 @@ const options = {
                 url: "http://localhost:5000/",
                 description: "Local server"
             },
+            {
+                url: "https://myecurrency-live-assessment.onrender.com/",
+                description: "Production server"
+            }
         ],
         components: {
             securitySchemes: {

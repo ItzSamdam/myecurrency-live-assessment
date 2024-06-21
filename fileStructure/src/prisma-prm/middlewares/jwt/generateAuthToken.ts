@@ -1,0 +1,53 @@
+//@ts-ignore
+import jwt from "jsonwebtoken";
+import { config } from "../../config/config.config";
+import { IResponseToken } from "../../interfaces/i.response.token";
+import { prisma } from "../../utils/misc.utils";
+import moment from "moment";
+
+/**
+ * This function generates valid access and refresh tokens
+ *
+ * @param {string} userId - The user id of the user that owns this jwt
+ * @returns Returns an object with accessToken, refreshToken, refreshTokenExpiresIn, and accessTokenExpiresIn
+ */
+const generateAuthToken = async (
+  userId: string,
+): Promise<IResponseToken> => {
+  const accessTokenOptions = {
+    expiresIn: config.jwt.access_token.expire,
+  };
+
+  const refreshTokenOptions = {
+    expiresIn: config.jwt.refresh_token.expire,
+  };
+
+  const accessToken = jwt.sign({ userId }, config.jwt.access_token.secret, accessTokenOptions);
+  const refreshToken = jwt.sign({ userId }, config.jwt.refresh_token.secret, refreshTokenOptions);
+
+
+  const refreshTokenExpires = moment().add(config.jwt.refresh_token.expire, "days");
+  //handle saving to db and retrieving from db
+  // await prisma.userTokens.upsert({
+  //   where: { userId },
+  //   create: {
+  //     userId,
+  //     accessToken,
+  //     refreshToken,
+  //     refreshTokenExpires: refreshTokenExpires.toDate(),
+  //   },
+  //   update: {
+  //     accessToken,
+  //     refreshToken,
+  //     refreshTokenExpires: refreshTokenExpires.toDate(),
+  //   },
+  // });
+  return {
+    accessToken,
+    refreshToken,
+    refreshTokenExpiresIn: config.jwt.refresh_token.expire,
+    accessTokenExpiresIn: config.jwt.access_token.expire,
+  };
+};
+
+export { generateAuthToken }
